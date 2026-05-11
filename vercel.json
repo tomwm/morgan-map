@@ -1,0 +1,7 @@
+{
+  "rewrites": [
+    { "source": "/gallery",   "destination": "/index.html" },
+    { "source": "/view/:id",  "destination": "/index.html" },
+    { "source": "/admin",     "destination": "/index.html" }
+  ]
+}
