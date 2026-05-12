@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Map, ArrowLeft, Calendar, Trash2 } from 'lucide-react';
+import { Map, ArrowLeft, Calendar, Trash2, LogIn } from 'lucide-react';
+import { UserButton, SignInButton, useAuth } from '@clerk/clerk-react';
 import { getPublishToken, removePublishToken } from '../utils/localSaves';
 import { MapThumbnail } from '../components/MapThumbnail';
+import { AUTH_ENABLED } from '../components/Auth/AuthProvider';
 
 function goBackToEditor() {
   if (window.history.length > 1) {
@@ -33,6 +35,9 @@ function timeAgo(dateStr: string): string {
 }
 
 export function GalleryPage() {
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const { isSignedIn } = AUTH_ENABLED ? useAuth() : { isSignedIn: false };
+
   const [maps, setMaps] = useState<PublishedMap[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -85,6 +90,17 @@ export function GalleryPage() {
           <ArrowLeft size={13} />
           Back to editor
         </button>
+
+        {AUTH_ENABLED && (
+          isSignedIn
+            ? <UserButton afterSignOutUrl="/gallery" />
+            : <SignInButton mode="modal">
+                <button className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors">
+                  <LogIn size={13} />
+                  Sign in
+                </button>
+              </SignInButton>
+        )}
       </div>
 
       {/* Content */}

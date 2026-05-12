@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
-import { Map, ArrowLeft, Copy, Check, LayoutGrid, Trash2 } from 'lucide-react';
+import { Map, Copy, Check, LayoutGrid, Trash2, LogIn } from 'lucide-react';
+import { UserButton, SignInButton, useAuth } from '@clerk/clerk-react';
 import { useMapStore } from '../store/mapStore';
 import { MapCanvas } from '../components/MapCanvas';
 import { NodeDetailPanel } from '../components/Panel/NodeDetailPanel';
 import { ViewsPanel } from '../components/Panel/ViewsPanel';
 import { HelpPanel } from '../components/Panel/HelpPanel';
 import { getPublishToken, removePublishToken } from '../utils/localSaves';
+import { AUTH_ENABLED } from '../components/Auth/AuthProvider';
 
 interface ViewerAppProps {
   mapId: string;
@@ -16,6 +18,9 @@ export function ViewerApp({ mapId }: ViewerAppProps) {
   const setMapName = useMapStore((s) => s.setMapName);
   const triggerFitView = useMapStore((s) => s.triggerFitView);
   const activePanel = useMapStore((s) => s.activePanel);
+
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const { isSignedIn } = AUTH_ENABLED ? useAuth() : { isSignedIn: false };
 
   const [mapName, setName] = useState('');
   const [loading, setLoading] = useState(true);
@@ -87,6 +92,7 @@ export function ViewerApp({ mapId }: ViewerAppProps) {
 
       {/* Viewer toolbar */}
       <div className="flex items-center h-14 px-4 bg-white border-b border-gray-200 gap-3 flex-shrink-0 z-10">
+        {/* Brand */}
         <div className="flex items-center gap-2">
           <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
             <Map size={14} className="text-white" />
@@ -98,27 +104,38 @@ export function ViewerApp({ mapId }: ViewerAppProps) {
 
         <span className="text-sm font-medium text-gray-700">{mapName}</span>
 
-        <span className="text-[11px] text-gray-400 bg-amber-50 border border-amber-100 text-amber-600 rounded-full px-2 py-0.5 font-medium">
+        <span className="text-[11px] bg-amber-50 border border-amber-100 text-amber-600 rounded-full px-2 py-0.5 font-medium">
           Read only
         </span>
 
         <div className="flex-1" />
 
+        {/* Owner-only actions */}
         {canDelete && (
-          <button
-            onClick={handleDelete}
-            disabled={deleting}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-red-500 hover:bg-red-50 hover:text-red-600 transition-colors disabled:opacity-50"
-            title="Remove from gallery"
-          >
-            {deleting
-              ? <div className="w-3 h-3 border border-red-400 border-t-transparent rounded-full animate-spin" />
-              : <Trash2 size={13} />
-            }
-            {deleting ? 'Deleting…' : 'Delete'}
-          </button>
+          <>
+            <button
+              onClick={handleDelete}
+              disabled={deleting}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-red-500 hover:bg-red-50 hover:text-red-600 transition-colors disabled:opacity-50"
+              title="Remove from gallery"
+            >
+              {deleting
+                ? <div className="w-3 h-3 border border-red-400 border-t-transparent rounded-full animate-spin" />
+                : <Trash2 size={13} />
+              }
+              {deleting ? 'Deleting…' : 'Delete'}
+            </button>
+
+            <a
+              href="/?resume=1"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold transition-colors"
+            >
+              Open editor
+            </a>
+          </>
         )}
 
+        {/* Always-visible actions */}
         <a
           href="/gallery"
           className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors"
@@ -135,13 +152,17 @@ export function ViewerApp({ mapId }: ViewerAppProps) {
           {copied ? 'Copied!' : 'Copy link'}
         </button>
 
-        <button
-          onClick={() => window.history.length > 1 ? window.history.back() : (window.location.href = '/?resume=1')}
-          className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold transition-colors"
-        >
-          <ArrowLeft size={13} />
-          Open editor
-        </button>
+        {/* Auth */}
+        {AUTH_ENABLED && (
+          isSignedIn
+            ? <UserButton afterSignOutUrl="/gallery" />
+            : <SignInButton mode="modal">
+                <button className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors">
+                  <LogIn size={13} />
+                  Sign in
+                </button>
+              </SignInButton>
+        )}
       </div>
 
       {/* Map + panels */}
