@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react';
-import { X, FolderOpen, Trash2, Clock, Database, BookOpen, Star, Globe, Calendar } from 'lucide-react';
+import { X, FolderOpen, Trash2, Clock, Database, BookOpen, Star, Globe, Calendar, Cloud, LogIn } from 'lucide-react';
+import { useAuth } from '@clerk/clerk-react';
 import { listSavedMaps, deleteSavedMap, formatSavedAt, SavedMap, getPublishToken, removePublishToken } from '../../utils/localSaves';
+import { listCloudMaps, loadCloudMapData, deleteCloudMap, CloudMap } from '../../utils/cloudSaves';
 import { useMapStore } from '../../store/mapStore';
 import { SEED_NODES, SEED_EDGES } from '../../data/seedData';
+import { AUTH_ENABLED } from '../Auth/AuthProvider';
 
 interface PublishedMap {
   id: string;
@@ -29,14 +32,23 @@ interface SavedMapsModalProps {
 }
 
 export function SavedMapsModal({ onClose }: SavedMapsModalProps) {
-  const [tab, setTab] = useState<'local' | 'published'>('local');
+  const [tab, setTab] = useState<'local' | 'cloud' | 'published'>(AUTH_ENABLED ? 'local' : 'local');
   const [saves, setSaves] = useState<SavedMap[]>([]);
   const [published, setPublished] = useState<PublishedMap[]>([]);
+  const [cloudMaps, setCloudMaps] = useState<CloudMap[]>([]);
   const [publishedLoading, setPublishedLoading] = useState(false);
+  const [cloudLoading, setCloudLoading] = useState(false);
   const importMap = useMapStore((s) => s.importMap);
   const setMapName = useMapStore((s) => s.setMapName);
   const setCanvasSize = useMapStore((s) => s.setCanvasSize);
   const triggerFitView = useMapStore((s) => s.triggerFitView);
+  const setCloudMapId = useMapStore((s) => s.setCloudMapId);
+
+  // Auth
+  const { isSignedIn, getToken } = AUTH_ENABLED
+    ? // eslint-disable-next-line react-hooks/rules-of-hooks
+      useAuth()
+    : { isSignedIn: false, getToken: async () => null };
 
   useEffect(() => {
     setSaves(listSavedMaps());
@@ -50,7 +62,16 @@ export function SavedMapsModal({ onClose }: SavedMapsModalProps) {
         .then((data) => { setPublished(data); setPublishedLoading(false); })
         .catch(() => setPublishedLoading(false));
     }
-  }, [tab]);
+    if (tab === 'cloud' && isSignedIn && cloudMaps.length === 0) {
+      setCloudLoading(true);
+      getToken().then((token) => {
+        if (!token) { setCloudLoading(false); return; }
+        listCloudMaps(() => Promise.resolve(token))
+          .then((data) => { setCloudMaps(data); setCloudLoading(false); })
+          .catch(() => setCloudLoading(false));
+      });
+    }
+  }, [tab, isSignedIn]);
 
   const handleLoad = (save: SavedMap) => {
     importMap({ nodes: save.nodes, edges: save.edges });
@@ -70,6 +91,33 @@ export function SavedMapsModal({ onClose }: SavedMapsModalProps) {
   const handleDelete = (id: string) => {
     deleteSavedMap(id);
     setSaves(listSavedMaps());
+  };
+
+  const handleLoadCloud = async (id: string) => {
+    const token = await getToken();
+    if (!token) return;
+    try {
+      const data = await loadCloudMapData(() => Promise.resolve(token), id);
+      importMap({ nodes: data.nodes, edges: data.edges });
+      setMapName(data.name);
+      setCanvasSize(data.canvasWidth ?? 1200, data.canvasHeight ?? 900);
+      setCloudMapId(id);
+      setTimeout(() => triggerFitView(), 100);
+      onClose();
+    } catch {
+      alert('Failed to load map.');
+    }
+  };
+
+  const handleDeleteCloud = async (id: string) => {
+    const token = await getToken();
+    if (!token) return;
+    try {
+      await deleteCloudMap(() => Promise.resolve(token), id);
+      setCloudMaps((prev) => prev.filter((m) => m.id !== id));
+    } catch {
+      alert('Failed to delete map.');
+    }
   };
 
   const handleDeletePublished = async (mapId: string) => {
@@ -111,6 +159,15 @@ export function SavedMapsModal({ onClose }: SavedMapsModalProps) {
             <Database size={12} />
             Saved locally
           </button>
+          {AUTH_ENABLED && (
+            <button
+              onClick={() => setTab('cloud')}
+              className={`flex items-center gap-1.5 px-1 py-3 text-xs font-medium border-b-2 transition-colors mr-5 ${tab === 'cloud' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+            >
+              <Cloud size={12} />
+              Cloud
+            </button>
+          )}
           <button
             onClick={() => setTab('published')}
             className={`flex items-center gap-1.5 px-1 py-3 text-xs font-medium border-b-2 transition-colors ${tab === 'published' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
@@ -122,6 +179,68 @@ export function SavedMapsModal({ onClose }: SavedMapsModalProps) {
 
         {/* Body */}
         <div className="flex-1 overflow-y-auto p-4">
+
+          {/* ── Cloud tab ── */}
+          {tab === 'cloud' && (
+            <>
+              {!isSignedIn ? (
+                <div className="flex flex-col items-center justify-center py-12 text-center gap-3">
+                  <Cloud size={28} className="text-gray-200" />
+                  <p className="text-sm font-medium text-gray-400">Sign in to sync maps across devices</p>
+                  <a
+                    href="/sign-in"
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold transition-colors"
+                  >
+                    <LogIn size={12} />
+                    Sign in
+                  </a>
+                </div>
+              ) : cloudLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                </div>
+              ) : cloudMaps.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <Cloud size={28} className="text-gray-200 mb-3" />
+                  <p className="text-sm font-medium text-gray-400">No cloud maps yet</p>
+                  <p className="text-xs text-gray-300 mt-1">Use File → Save to cloud to sync your map.</p>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-2">
+                  {cloudMaps.map((m) => (
+                    <div key={m.id} className="flex items-center gap-3 p-3 rounded-xl border border-gray-100 hover:border-blue-200 hover:bg-blue-50/40 group transition-all">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-800 truncate">{m.name}</p>
+                        <div className="flex items-center gap-3 mt-0.5">
+                          <span className="text-[11px] text-gray-400">{m.node_count} nodes · {m.edge_count} edges</span>
+                          <span className="flex items-center gap-1 text-[11px] text-gray-400 ml-auto">
+                            <Clock size={10} />
+                            {timeAgo(m.updated_at)}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+                        <button
+                          onClick={() => handleDeleteCloud(m.id)}
+                          className="p-1.5 rounded-lg hover:bg-red-100 text-gray-400 hover:text-red-500 transition-colors"
+                          title="Delete"
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                        <button
+                          onClick={() => handleLoadCloud(m.id)}
+                          className="flex items-center gap-1 px-2.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold transition-colors"
+                        >
+                          <FolderOpen size={11} />
+                          Open
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
 
           {/* ── Published tab ── */}
           {tab === 'published' && (

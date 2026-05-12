@@ -1,10 +1,7 @@
 import { useRef, useState } from 'react';
 import {
   Plus,
-  // Zap, // unused while Analyse button is hidden
-  // Layers, // unused while Overlays are hidden
   SlidersHorizontal,
-  // ShieldAlert, // unused while Risks button is hidden
   Download,
   Upload,
   Maximize2,
@@ -19,12 +16,20 @@ import {
   FolderClosed,
   HelpCircle,
   Globe,
+  Cloud,
+  Image,
+  FileType,
+  FileText,
 } from 'lucide-react';
+import { UserButton, SignInButton, useAuth } from '@clerk/clerk-react';
 import { useMapStore, CANVAS_SIZE_PRESETS } from '../../store/mapStore';
 import { exportToJSON, importFromJSON } from '../../utils/exportImport';
 import { saveMap } from '../../utils/localSaves';
+import { saveCloudMap } from '../../utils/cloudSaves';
+import { exportAsPng, exportAsSvg, exportAsPdf } from '../../utils/exportCanvas';
 import { SavedMapsModal } from '../Modals/SavedMapsModal';
 import { PublishModal } from '../Modals/PublishModal';
+import { AUTH_ENABLED } from '../Auth/AuthProvider';
 
 interface MainToolbarProps {
   onAddNode: () => void;
@@ -38,21 +43,28 @@ export function MainToolbar({ onAddNode, onFitView }: MainToolbarProps) {
   const edges = useMapStore((s) => s.edges);
   const activePanel = useMapStore((s) => s.activePanel);
   const setActivePanel = useMapStore((s) => s.setActivePanel);
-  // const overlays = useMapStore((s) => s.overlays); // unused while Overlays are hidden
   const filters = useMapStore((s) => s.filters);
-  // const computeRiskFlags = useMapStore((s) => s.computeRiskFlags); // unused while Analyse button is hidden
   const importMap = useMapStore((s) => s.importMap);
   const gridLocked = useMapStore((s) => s.gridLocked);
   const canvasWidth = useMapStore((s) => s.canvasWidth);
   const canvasHeight = useMapStore((s) => s.canvasHeight);
   const setCanvasSize = useMapStore((s) => s.setCanvasSize);
   const newMap = useMapStore((s) => s.newMap);
+  const cloudMapId = useMapStore((s) => s.cloudMapId);
+  const setCloudMapId = useMapStore((s) => s.setCloudMapId);
+
+  // Auth — safe to call unconditionally when wrapped in ClerkProvider
+  const { isSignedIn, getToken } = AUTH_ENABLED
+    ? // eslint-disable-next-line react-hooks/rules-of-hooks
+      useAuth()
+    : { isSignedIn: false, getToken: async () => null };
 
   const [editingName, setEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState(mapName);
   const [showSavedMaps, setShowSavedMaps] = useState(false);
   const [showPublish, setShowPublish] = useState(false);
   const [saveFlash, setSaveFlash] = useState(false);
+  const [cloudSaveFlash, setCloudSaveFlash] = useState(false);
   const [showFileMenu, setShowFileMenu] = useState(false);
   const [showCanvasMenu, setShowCanvasMenu] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -70,9 +82,31 @@ export function MainToolbar({ onAddNode, onFitView }: MainToolbarProps) {
     filters.automationRange[0] > 0 ||
     filters.automationRange[1] < 1;
 
-  const handleExport = () => {
+  const handleExportJSON = () => {
     exportToJSON(mapName, nodes, edges);
     setShowFileMenu(false);
+  };
+
+  const handleExportPng = () => { exportAsPng(mapName); setShowFileMenu(false); };
+  const handleExportSvg = () => { exportAsSvg(mapName); setShowFileMenu(false); };
+  const handleExportPdf = () => { exportAsPdf(mapName); setShowFileMenu(false); };
+
+  const handleSaveToCloud = async () => {
+    setShowFileMenu(false);
+    if (!isSignedIn) { window.location.href = '/sign-in'; return; }
+    try {
+      const token = await getToken();
+      if (!token) return;
+      const saved = await saveCloudMap(
+        () => Promise.resolve(token),
+        { id: cloudMapId ?? undefined, name: mapName, nodes, edges, canvasWidth, canvasHeight, gridLocked }
+      );
+      setCloudMapId(saved.id);
+      setCloudSaveFlash(true);
+      setTimeout(() => setCloudSaveFlash(false), 1500);
+    } catch {
+      alert('Failed to save to cloud. Please try again.');
+    }
   };
 
   const handleImport = async (file: File) => {
@@ -222,32 +256,55 @@ export function MainToolbar({ onAddNode, onFitView }: MainToolbarProps) {
               showFileMenu ? 'bg-gray-200 text-gray-800' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
             }`}
           >
-            {saveFlash ? <Check size={13} className="text-green-600" /> : <FolderClosed size={13} />}
-            {saveFlash ? <span className="text-green-600">Saved!</span> : 'File'}
+            {cloudSaveFlash ? <Check size={13} className="text-green-600" /> : saveFlash ? <Check size={13} className="text-green-600" /> : <FolderClosed size={13} />}
+            {cloudSaveFlash ? <span className="text-green-600">Cloud saved!</span> : saveFlash ? <span className="text-green-600">Saved!</span> : 'File'}
             <ChevronDown size={11} className={`transition-transform ${showFileMenu ? 'rotate-180' : ''}`} />
           </button>
           {showFileMenu && (
             <>
               <div className="fixed inset-0 z-20" onClick={() => setShowFileMenu(false)} />
-              <div className="absolute left-0 top-full mt-1 w-44 bg-white border border-gray-200 rounded-lg shadow-lg z-30 py-1 overflow-hidden">
+              <div className="absolute left-0 top-full mt-1 w-52 bg-white border border-gray-200 rounded-lg shadow-lg z-30 py-1 overflow-hidden">
+
+                {/* Save */}
                 <button onClick={handleSave} className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 transition-colors">
-                  <Save size={13} className="text-gray-400" />Save
+                  <Save size={13} className="text-gray-400" />Save locally
                 </button>
+                {AUTH_ENABLED && (
+                  <button onClick={handleSaveToCloud} className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 transition-colors">
+                    <Cloud size={13} className={isSignedIn ? 'text-blue-400' : 'text-gray-400'} />
+                    {isSignedIn ? 'Save to cloud' : 'Save to cloud (sign in)'}
+                  </button>
+                )}
                 <button onClick={() => { setShowSavedMaps(true); setShowFileMenu(false); }} className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 transition-colors">
                   <FolderOpen size={13} className="text-gray-400" />Open
                 </button>
                 <div className="my-1 border-t border-gray-100" />
+
+                {/* New */}
                 <button onClick={handleNewMap} className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 transition-colors">
                   <FilePlus size={13} className="text-gray-400" />New
                 </button>
                 <div className="my-1 border-t border-gray-100" />
-                <button onClick={handleExport} className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 transition-colors">
+
+                {/* Export */}
+                <button onClick={handleExportJSON} className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 transition-colors">
                   <Download size={13} className="text-gray-400" />Export as JSON
+                </button>
+                <button onClick={handleExportPng} className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 transition-colors">
+                  <Image size={13} className="text-gray-400" />Export as PNG
+                </button>
+                <button onClick={handleExportSvg} className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 transition-colors">
+                  <FileType size={13} className="text-gray-400" />Export as SVG
+                </button>
+                <button onClick={handleExportPdf} className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 transition-colors">
+                  <FileText size={13} className="text-gray-400" />Export as PDF
                 </button>
                 <button onClick={() => { fileInputRef.current?.click(); setShowFileMenu(false); }} className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 transition-colors">
                   <Upload size={13} className="text-gray-400" />Import from JSON
                 </button>
                 <div className="my-1 border-t border-gray-100" />
+
+                {/* Publish */}
                 <button onClick={() => { setShowPublish(true); setShowFileMenu(false); }} className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 transition-colors">
                   <Globe size={13} className="text-blue-400" />Publish to gallery
                 </button>
@@ -289,6 +346,22 @@ export function MainToolbar({ onAddNode, onFitView }: MainToolbarProps) {
         >
           <Maximize2 size={13} />
         </button>
+
+        {/* Auth */}
+        {AUTH_ENABLED && (
+          <>
+            <div className="w-px h-5 bg-gray-200" />
+            {isSignedIn ? (
+              <UserButton afterSignOutUrl="/" />
+            ) : (
+              <SignInButton mode="modal">
+                <button className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors">
+                  Sign in
+                </button>
+              </SignInButton>
+            )}
+          </>
+        )}
 
       </div>
 

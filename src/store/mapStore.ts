@@ -93,6 +93,10 @@ interface MapStore {
   // Edge labels
   showEdgeLabels: boolean;
   toggleShowEdgeLabels: () => void;
+
+  // Cloud save
+  cloudMapId: string | null;
+  setCloudMapId: (id: string | null) => void;
 }
 
 let nodeIdCounter = 100;
@@ -145,6 +149,7 @@ export const useMapStore = create<MapStore>((set) => ({
   canvasHeight: 900,
   showStepNumbers: true,
   showEdgeLabels: true,
+  cloudMapId: null,
 
   onNodesChange: (changes: NodeChange[]) => {
     set((state) => {
@@ -383,6 +388,7 @@ export const useMapStore = create<MapStore>((set) => ({
   toggleNodesLocked: () => set((state) => ({ nodesLocked: !state.nodesLocked })),
   toggleShowStepNumbers: () => set((state) => ({ showStepNumbers: !state.showStepNumbers })),
   toggleShowEdgeLabels: () => set((state) => ({ showEdgeLabels: !state.showEdgeLabels })),
+  setCloudMapId: (id) => set({ cloudMapId: id }),
 
   setCanvasSize: (width, height) => {
     set((state) => {
@@ -409,6 +415,7 @@ export const useMapStore = create<MapStore>((set) => ({
       canvasHeight: 900,
       gridLocked: true,
       fitViewTrigger: 0,
+      cloudMapId: null,
     });
   },
 }));

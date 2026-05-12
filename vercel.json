@@ -1,7 +1,9 @@
 {
   "rewrites": [
-    { "source": "/gallery",   "destination": "/index.html" },
-    { "source": "/view/:id",  "destination": "/index.html" },
-    { "source": "/admin",     "destination": "/index.html" }
+    { "source": "/gallery",    "destination": "/index.html" },
+    { "source": "/view/:id",   "destination": "/index.html" },
+    { "source": "/admin",      "destination": "/index.html" },
+    { "source": "/sign-in",    "destination": "/index.html" },
+    { "source": "/sign-up",    "destination": "/index.html" }
   ]
 }
