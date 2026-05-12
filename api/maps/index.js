@@ -7,11 +7,26 @@ const cors = (res) => {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 };
 
+async function migrate(sql) {
+  await sql`
+    CREATE TABLE IF NOT EXISTS published_maps (
+      id            uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+      name          text NOT NULL,
+      node_count    int  NOT NULL DEFAULT 0,
+      edge_count    int  NOT NULL DEFAULT 0,
+      map_data      jsonb NOT NULL DEFAULT '{}',
+      published_at  timestamptz NOT NULL DEFAULT now(),
+      delete_token_hash text
+    )
+  `;
+}
+
 export default async function handler(req, res) {
   cors(res);
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   const sql = neon(process.env.DATABASE_URL);
+  await migrate(sql);
 
   // ── GET /api/maps — list published maps ──────────────────────────────────
   if (req.method === 'GET') {
@@ -47,12 +62,6 @@ export default async function handler(req, res) {
     if (!name || !Array.isArray(nodes) || !Array.isArray(edges)) {
       return res.status(400).json({ error: 'name, nodes and edges are required' });
     }
-
-    // Ensure delete_token_hash column exists (idempotent migration)
-    await sql`
-      ALTER TABLE published_maps
-      ADD COLUMN IF NOT EXISTS delete_token_hash text
-    `;
 
     const deleteToken = randomBytes(32).toString('hex');
     const deleteTokenHash = createHash('sha256').update(deleteToken).digest('hex');

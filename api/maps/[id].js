@@ -14,6 +14,19 @@ export default async function handler(req, res) {
   const { id, token } = req.query;
   const sql = neon(process.env.DATABASE_URL);
 
+  // Ensure table exists
+  await sql`
+    CREATE TABLE IF NOT EXISTS published_maps (
+      id            uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+      name          text NOT NULL,
+      node_count    int  NOT NULL DEFAULT 0,
+      edge_count    int  NOT NULL DEFAULT 0,
+      map_data      jsonb NOT NULL DEFAULT '{}',
+      published_at  timestamptz NOT NULL DEFAULT now(),
+      delete_token_hash text
+    )
+  `;
+
   // ── GET /api/maps/[id] ───────────────────────────────────────────────────
   if (req.method === 'GET') {
     const [row] = await sql`
