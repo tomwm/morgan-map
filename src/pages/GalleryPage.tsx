@@ -1,17 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Map, ArrowLeft, Calendar, Trash2, LogIn } from 'lucide-react';
+import { Map, Calendar, Trash2, LogIn } from 'lucide-react';
 import { UserButton, SignInButton, useAuth } from '@clerk/clerk-react';
 import { getPublishToken, removePublishToken } from '../utils/localSaves';
 import { MapThumbnail } from '../components/MapThumbnail';
 import { AUTH_ENABLED } from '../components/Auth/AuthProvider';
 
-function goBackToEditor() {
-  if (window.history.length > 1) {
-    window.history.back();
-  } else {
-    window.location.href = '/?resume=1';
-  }
-}
 
 interface PublishedMap {
   id: string;
@@ -74,22 +67,15 @@ export function GalleryPage() {
 
       {/* Header */}
       <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center gap-4">
-        <div className="flex items-center gap-2">
+        <a href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
           <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
             <Map size={14} className="text-white" />
           </div>
           <span className="text-sm font-bold text-gray-800 tracking-tight">Morgan Map</span>
-        </div>
+        </a>
         <div className="w-px h-5 bg-gray-200" />
         <h1 className="text-sm font-semibold text-gray-800">Published Maps</h1>
         <div className="flex-1" />
-        <button
-          onClick={goBackToEditor}
-          className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-700 transition-colors"
-        >
-          <ArrowLeft size={13} />
-          Back to editor
-        </button>
 
         {AUTH_ENABLED && (
           isSignedIn

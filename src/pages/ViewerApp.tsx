@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Map, Copy, Check, LayoutGrid, Trash2, LogIn } from 'lucide-react';
+import { Map, Copy, Check, LayoutGrid, Trash2, LogIn, Pencil } from 'lucide-react';
 import { UserButton, SignInButton, useAuth } from '@clerk/clerk-react';
 import { useMapStore } from '../store/mapStore';
 import { MapCanvas } from '../components/MapCanvas';
@@ -92,13 +92,13 @@ export function ViewerApp({ mapId }: ViewerAppProps) {
 
       {/* Viewer toolbar */}
       <div className="flex items-center h-14 px-4 bg-white border-b border-gray-200 gap-3 flex-shrink-0 z-10">
-        {/* Brand */}
-        <div className="flex items-center gap-2">
+        {/* Brand — links to editor */}
+        <a href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
           <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
             <Map size={14} className="text-white" />
           </div>
           <span className="text-sm font-bold text-gray-800 tracking-tight">Morgan Map</span>
-        </div>
+        </a>
 
         <div className="w-px h-5 bg-gray-200" />
 
@@ -129,8 +129,10 @@ export function ViewerApp({ mapId }: ViewerAppProps) {
             <a
               href="/?resume=1"
               className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold transition-colors"
+              title="Open this map in the editor"
             >
-              Open editor
+              <Pencil size={13} />
+              Edit
             </a>
           </>
         )}
