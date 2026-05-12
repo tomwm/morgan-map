@@ -1,12 +1,9 @@
 import { useRef, useState } from 'react';
 import {
   Plus,
-  SlidersHorizontal,
   Download,
   Upload,
   Map,
-  LayoutGrid,
-  Scaling,
   FilePlus,
   Save,
   FolderOpen,
@@ -14,7 +11,6 @@ import {
   ChevronRight,
   Check,
   FolderClosed,
-  HelpCircle,
   Globe,
   Cloud,
   Image,
@@ -37,9 +33,9 @@ interface MainToolbarProps {
   onFitView: () => void;
 }
 
-// Shared text-nav item styles
-const navText = 'flex items-center gap-1 text-xs text-gray-500 hover:text-gray-900 transition-colors px-1 py-1 select-none cursor-pointer whitespace-nowrap';
-const navTextActive = 'flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 transition-colors px-1 py-1 select-none cursor-pointer whitespace-nowrap';
+// Shared text-nav item styles — no icons, just words
+const navText = 'flex items-center gap-0.5 text-[13px] text-gray-500 hover:text-gray-900 transition-colors px-2 py-1 select-none cursor-pointer whitespace-nowrap';
+const navTextActive = 'flex items-center gap-0.5 text-[13px] text-blue-600 hover:text-blue-700 transition-colors px-2 py-1 select-none cursor-pointer whitespace-nowrap';
 
 export function MainToolbar({ onAddNode }: MainToolbarProps) {
   const mapName = useMapStore((s) => s.mapName);
@@ -141,7 +137,7 @@ export function MainToolbar({ onAddNode }: MainToolbarProps) {
 
   return (
     <>
-    <div className="flex items-center h-12 px-4 bg-white border-b border-gray-200 gap-2 flex-shrink-0 z-10 overflow-hidden">
+    <div className="flex items-center h-12 px-4 bg-white border-b border-gray-200 gap-2 flex-shrink-0 relative z-50">
 
       {/* Logo */}
       <div className="flex items-center gap-2 flex-shrink-0 mr-1">
@@ -202,8 +198,7 @@ export function MainToolbar({ onAddNode }: MainToolbarProps) {
             onClick={() => setShowCanvasMenu((v) => !v)}
             className={showCanvasMenu ? navTextActive : navText}
           >
-            <Scaling size={12} />
-            <span className="hidden md:inline">Canvas</span>
+            Canvas
             <ChevronDown size={10} className={`transition-transform ${showCanvasMenu ? 'rotate-180' : ''}`} />
           </button>
           {showCanvasMenu && (
@@ -235,9 +230,8 @@ export function MainToolbar({ onAddNode }: MainToolbarProps) {
           onClick={() => togglePanel('views')}
           className={activePanel === 'views' ? navTextActive : navText}
         >
-          <SlidersHorizontal size={12} />
-          <span className="hidden md:inline">Filters</span>
-          {hasActiveFilters && <span className="w-1.5 h-1.5 rounded-full bg-blue-500 flex-shrink-0" />}
+          Filters
+          {hasActiveFilters && <span className="w-1.5 h-1.5 rounded-full bg-blue-500 flex-shrink-0 ml-0.5" />}
         </button>
 
         {/* File */}
@@ -246,13 +240,7 @@ export function MainToolbar({ onAddNode }: MainToolbarProps) {
             onClick={() => setShowFileMenu((v) => !v)}
             className={showFileMenu ? navTextActive : `${navText} ${(saveFlash || cloudSaveFlash) ? '!text-green-600' : ''}`}
           >
-            {(saveFlash || cloudSaveFlash)
-              ? <Check size={12} className="text-green-600" />
-              : <FolderClosed size={12} />
-            }
-            <span className="hidden md:inline">
-              {cloudSaveFlash ? 'Saved!' : saveFlash ? 'Saved!' : 'File'}
-            </span>
+            {(saveFlash || cloudSaveFlash) ? 'Saved!' : 'File'}
             <ChevronDown size={10} className={`transition-transform ${showFileMenu ? 'rotate-180' : ''}`} />
           </button>
           {showFileMenu && (
@@ -331,8 +319,7 @@ export function MainToolbar({ onAddNode }: MainToolbarProps) {
           onClick={() => togglePanel('help')}
           className={activePanel === 'help' ? navTextActive : navText}
         >
-          <HelpCircle size={12} />
-          <span className="hidden md:inline">Guide</span>
+          Guide
         </button>
 
         {/* Gallery */}
@@ -341,8 +328,7 @@ export function MainToolbar({ onAddNode }: MainToolbarProps) {
           onClick={() => history.replaceState(null, '', '/?resume=1')}
           className={navText}
         >
-          <LayoutGrid size={12} />
-          <span className="hidden md:inline">Gallery</span>
+          Gallery
         </a>
 
       </div>
