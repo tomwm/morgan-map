@@ -29,10 +29,11 @@ function timeAgo(dateStr: string): string {
 
 interface SavedMapsModalProps {
   onClose: () => void;
+  initialTab?: 'local' | 'cloud' | 'published';
 }
 
-export function SavedMapsModal({ onClose }: SavedMapsModalProps) {
-  const [tab, setTab] = useState<'local' | 'cloud' | 'published'>(AUTH_ENABLED ? 'local' : 'local');
+export function SavedMapsModal({ onClose, initialTab = 'local' }: SavedMapsModalProps) {
+  const [tab, setTab] = useState<'local' | 'cloud' | 'published'>(initialTab);
   const [saves, setSaves] = useState<SavedMap[]>([]);
   const [published, setPublished] = useState<PublishedMap[]>([]);
   const [cloudMaps, setCloudMaps] = useState<CloudMap[]>([]);

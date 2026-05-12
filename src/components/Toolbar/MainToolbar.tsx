@@ -12,6 +12,7 @@ import {
   Save,
   FolderOpen,
   ChevronDown,
+  ChevronRight,
   Check,
   FolderClosed,
   HelpCircle,
@@ -62,6 +63,13 @@ export function MainToolbar({ onAddNode, onFitView }: MainToolbarProps) {
   const [editingName, setEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState(mapName);
   const [showSavedMaps, setShowSavedMaps] = useState(false);
+  const [savedMapsTab, setSavedMapsTab] = useState<'local' | 'cloud' | 'published'>('local');
+
+  const openSavedMaps = (tab: 'local' | 'cloud' | 'published') => {
+    setSavedMapsTab(tab);
+    setShowSavedMaps(true);
+    setShowFileMenu(false);
+  };
   const [showPublish, setShowPublish] = useState(false);
   const [saveFlash, setSaveFlash] = useState(false);
   const [cloudSaveFlash, setCloudSaveFlash] = useState(false);
@@ -263,45 +271,84 @@ export function MainToolbar({ onAddNode, onFitView }: MainToolbarProps) {
           {showFileMenu && (
             <>
               <div className="fixed inset-0 z-20" onClick={() => setShowFileMenu(false)} />
-              <div className="absolute left-0 top-full mt-1 w-52 bg-white border border-gray-200 rounded-lg shadow-lg z-30 py-1 overflow-hidden">
-
-                {/* Save */}
-                <button onClick={handleSave} className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 transition-colors">
-                  <Save size={13} className="text-gray-400" />Save locally
-                </button>
-                {AUTH_ENABLED && (
-                  <button onClick={handleSaveToCloud} className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 transition-colors">
-                    <Cloud size={13} className={isSignedIn ? 'text-blue-400' : 'text-gray-400'} />
-                    {isSignedIn ? 'Save to cloud' : 'Save to cloud (sign in)'}
-                  </button>
-                )}
-                <button onClick={() => { setShowSavedMaps(true); setShowFileMenu(false); }} className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 transition-colors">
-                  <FolderOpen size={13} className="text-gray-400" />Open
-                </button>
-                <div className="my-1 border-t border-gray-100" />
+              <div className="absolute left-0 top-full mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-30 py-1 overflow-visible">
 
                 {/* New */}
                 <button onClick={handleNewMap} className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 transition-colors">
                   <FilePlus size={13} className="text-gray-400" />New
                 </button>
+
                 <div className="my-1 border-t border-gray-100" />
 
-                {/* Export */}
-                <button onClick={handleExportJSON} className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 transition-colors">
-                  <Download size={13} className="text-gray-400" />Export as JSON
-                </button>
-                <button onClick={handleExportPng} className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 transition-colors">
-                  <Image size={13} className="text-gray-400" />Export as PNG
-                </button>
-                <button onClick={handleExportSvg} className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 transition-colors">
-                  <FileType size={13} className="text-gray-400" />Export as SVG
-                </button>
-                <button onClick={handleExportPdf} className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 transition-colors">
-                  <FileText size={13} className="text-gray-400" />Export as PDF
-                </button>
-                <button onClick={() => { fileInputRef.current?.click(); setShowFileMenu(false); }} className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 transition-colors">
-                  <Upload size={13} className="text-gray-400" />Import from JSON
-                </button>
+                {/* Open → submenu */}
+                <div className="relative group/open">
+                  <button className="w-full flex items-center justify-between px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 transition-colors">
+                    <span className="flex items-center gap-2.5"><FolderOpen size={13} className="text-gray-400" />Open</span>
+                    <ChevronRight size={11} className="text-gray-400" />
+                  </button>
+                  <div className="absolute left-full top-0 -mt-1 ml-0.5 hidden group-hover/open:block w-44 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-40">
+                    <button onClick={() => openSavedMaps('local')} className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 transition-colors">
+                      <FolderClosed size={13} className="text-gray-400" />Local saves
+                    </button>
+                    {AUTH_ENABLED && (
+                      <button onClick={() => openSavedMaps('cloud')} className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 transition-colors">
+                        <Cloud size={13} className="text-blue-400" />Cloud
+                      </button>
+                    )}
+                    <button onClick={() => openSavedMaps('published')} className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 transition-colors">
+                      <Globe size={13} className="text-gray-400" />Published maps
+                    </button>
+                    <div className="my-1 border-t border-gray-100" />
+                    <button onClick={() => { fileInputRef.current?.click(); setShowFileMenu(false); }} className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 transition-colors">
+                      <Upload size={13} className="text-gray-400" />Import from file
+                    </button>
+                  </div>
+                </div>
+
+                {/* Save → submenu */}
+                <div className="relative group/save">
+                  <button className="w-full flex items-center justify-between px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 transition-colors">
+                    <span className="flex items-center gap-2.5"><Save size={13} className="text-gray-400" />Save</span>
+                    <ChevronRight size={11} className="text-gray-400" />
+                  </button>
+                  <div className="absolute left-full top-0 -mt-1 ml-0.5 hidden group-hover/save:block w-44 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-40">
+                    <button onClick={handleSave} className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 transition-colors">
+                      <FolderClosed size={13} className="text-gray-400" />Locally
+                    </button>
+                    {AUTH_ENABLED && (
+                      <button onClick={handleSaveToCloud} className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 transition-colors">
+                        <Cloud size={13} className={isSignedIn ? 'text-blue-400' : 'text-gray-400'} />
+                        {isSignedIn ? 'To cloud' : 'To cloud (sign in)'}
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                <div className="my-1 border-t border-gray-100" />
+
+                {/* Export → submenu */}
+                <div className="relative group/export">
+                  <button className="w-full flex items-center justify-between px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 transition-colors">
+                    <span className="flex items-center gap-2.5"><Download size={13} className="text-gray-400" />Export</span>
+                    <ChevronRight size={11} className="text-gray-400" />
+                  </button>
+                  <div className="absolute left-full top-0 -mt-1 ml-0.5 hidden group-hover/export:block w-40 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-40">
+                    <button onClick={handleExportPng} className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 transition-colors">
+                      <Image size={13} className="text-gray-400" />PNG
+                    </button>
+                    <button onClick={handleExportSvg} className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 transition-colors">
+                      <FileType size={13} className="text-gray-400" />SVG
+                    </button>
+                    <button onClick={handleExportPdf} className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 transition-colors">
+                      <FileText size={13} className="text-gray-400" />PDF
+                    </button>
+                    <div className="my-1 border-t border-gray-100" />
+                    <button onClick={handleExportJSON} className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 transition-colors">
+                      <Download size={13} className="text-gray-400" />JSON
+                    </button>
+                  </div>
+                </div>
+
                 <div className="my-1 border-t border-gray-100" />
 
                 {/* Publish */}
@@ -378,7 +425,7 @@ export function MainToolbar({ onAddNode, onFitView }: MainToolbarProps) {
       />
     </div>
 
-    {showSavedMaps && <SavedMapsModal onClose={() => setShowSavedMaps(false)} />}
+    {showSavedMaps && <SavedMapsModal onClose={() => setShowSavedMaps(false)} initialTab={savedMapsTab} />}
     {showPublish && <PublishModal onClose={() => setShowPublish(false)} />}
     </>
   );
