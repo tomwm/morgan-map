@@ -224,6 +224,16 @@ function MapCanvasInner({ readOnly = false }: { readOnly?: boolean }) {
           showInteractive={false}
           showFitView={false}
         >
+          {/* Fit to view */}
+          <ControlButton
+            onClick={() => rfInstance.current?.fitView({ padding: 0.12, duration: 400 })}
+            title="Fit map to view"
+          >
+            <svg viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg" width="12" height="12">
+              <path d="M1 5V2a1 1 0 011-1h3M1 10v3a1 1 0 001 1h3M14 5V2a1 1 0 00-1-1h-3M14 10v3a1 1 0 01-1 1h-3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+            </svg>
+          </ControlButton>
+
           {/* Selection box tool */}
           <ControlButton
             onClick={() => setSelectionMode((v) => !v)}

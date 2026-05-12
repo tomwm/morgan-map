@@ -4,7 +4,6 @@ import {
   SlidersHorizontal,
   Download,
   Upload,
-  Maximize2,
   Map,
   LayoutGrid,
   Scaling,
@@ -21,6 +20,7 @@ import {
   Image,
   FileType,
   FileText,
+  UserRound,
 } from 'lucide-react';
 import { UserButton, SignInButton, useAuth } from '@clerk/clerk-react';
 import { useMapStore, CANVAS_SIZE_PRESETS } from '../../store/mapStore';
@@ -37,7 +37,11 @@ interface MainToolbarProps {
   onFitView: () => void;
 }
 
-export function MainToolbar({ onAddNode, onFitView }: MainToolbarProps) {
+// Shared text-nav item styles
+const navText = 'flex items-center gap-1 text-xs text-gray-500 hover:text-gray-900 transition-colors px-1 py-1 select-none cursor-pointer whitespace-nowrap';
+const navTextActive = 'flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 transition-colors px-1 py-1 select-none cursor-pointer whitespace-nowrap';
+
+export function MainToolbar({ onAddNode }: MainToolbarProps) {
   const mapName = useMapStore((s) => s.mapName);
   const setMapName = useMapStore((s) => s.setMapName);
   const nodes = useMapStore((s) => s.nodes);
@@ -54,7 +58,6 @@ export function MainToolbar({ onAddNode, onFitView }: MainToolbarProps) {
   const cloudMapId = useMapStore((s) => s.cloudMapId);
   const setCloudMapId = useMapStore((s) => s.setCloudMapId);
 
-  // Auth — safe to call unconditionally when wrapped in ClerkProvider
   const { isSignedIn, getToken } = AUTH_ENABLED
     ? // eslint-disable-next-line react-hooks/rules-of-hooks
       useAuth()
@@ -64,22 +67,18 @@ export function MainToolbar({ onAddNode, onFitView }: MainToolbarProps) {
   const [nameDraft, setNameDraft] = useState(mapName);
   const [showSavedMaps, setShowSavedMaps] = useState(false);
   const [savedMapsTab, setSavedMapsTab] = useState<'local' | 'cloud'>('local');
-
-  const openSavedMaps = (tab: 'local' | 'cloud') => {
-    setSavedMapsTab(tab);
-    setShowSavedMaps(true);
-    setShowFileMenu(false);
-  };
   const [showPublish, setShowPublish] = useState(false);
   const [saveFlash, setSaveFlash] = useState(false);
   const [cloudSaveFlash, setCloudSaveFlash] = useState(false);
   const [showFileMenu, setShowFileMenu] = useState(false);
   const [showCanvasMenu, setShowCanvasMenu] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const fileMenuRef = useRef<HTMLDivElement>(null);
 
-  // const totalRiskFlags = nodes.reduce((acc, n) => acc + n.data.riskFlags.length, 0); // unused while Risks button is hidden
-  // const activeOverlayCount = (Object.keys(overlays) as (keyof typeof overlays)[]).filter((k) => overlays[k]).length; // unused while Overlays are hidden
+  const openSavedMaps = (tab: 'local' | 'cloud') => {
+    setSavedMapsTab(tab);
+    setShowSavedMaps(true);
+    setShowFileMenu(false);
+  };
 
   const hasActiveFilters =
     filters.nodeTypes.length > 0 ||
@@ -90,11 +89,7 @@ export function MainToolbar({ onAddNode, onFitView }: MainToolbarProps) {
     filters.automationRange[0] > 0 ||
     filters.automationRange[1] < 1;
 
-  const handleExportJSON = () => {
-    exportToJSON(mapName, nodes, edges);
-    setShowFileMenu(false);
-  };
-
+  const handleExportJSON = () => { exportToJSON(mapName, nodes, edges); setShowFileMenu(false); };
   const handleExportPng = () => { exportAsPng(mapName); setShowFileMenu(false); };
   const handleExportSvg = () => { exportAsSvg(mapName); setShowFileMenu(false); };
   const handleExportPdf = () => { exportAsPdf(mapName); setShowFileMenu(false); };
@@ -146,83 +141,75 @@ export function MainToolbar({ onAddNode, onFitView }: MainToolbarProps) {
 
   return (
     <>
-    <div className="flex items-center h-14 px-4 bg-white border-b border-gray-200 gap-3 flex-shrink-0 z-10">
-      {/* Logo / App name */}
-      <div className="flex items-center gap-2 mr-2">
+    <div className="flex items-center h-12 px-4 bg-white border-b border-gray-200 gap-2 flex-shrink-0 z-10 overflow-hidden">
+
+      {/* Logo */}
+      <div className="flex items-center gap-2 flex-shrink-0 mr-1">
         <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
           <Map size={14} className="text-white" />
         </div>
-        <span className="text-sm font-bold text-gray-800 tracking-tight">Morgan Map</span>
+        <span className="text-sm font-bold text-gray-800 tracking-tight hidden sm:block">Morgan Map</span>
       </div>
 
+      <div className="w-px h-4 bg-gray-200 flex-shrink-0" />
+
       {/* Map name */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 min-w-0 flex-shrink">
         {editingName ? (
           <input
             autoFocus
             value={nameDraft}
             onChange={(e) => setNameDraft(e.target.value)}
-            onBlur={() => {
-              setMapName(nameDraft || mapName);
-              setEditingName(false);
-            }}
+            onBlur={() => { setMapName(nameDraft || mapName); setEditingName(false); }}
             onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                setMapName(nameDraft || mapName);
-                setEditingName(false);
-              }
+              if (e.key === 'Enter') { setMapName(nameDraft || mapName); setEditingName(false); }
               if (e.key === 'Escape') setEditingName(false);
             }}
-            className="text-sm font-medium text-gray-700 border border-blue-300 rounded px-2 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-100 w-56"
+            className="text-sm font-medium text-gray-700 border border-blue-300 rounded px-2 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-100 w-48 min-w-0"
           />
         ) : (
           <button
             onClick={() => { setNameDraft(mapName); setEditingName(true); }}
-            className="text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded px-1 py-0.5 transition-colors"
-            title="Click to rename map"
+            className="text-sm font-medium text-gray-600 hover:text-gray-900 rounded px-1 py-0.5 transition-colors truncate max-w-[180px]"
+            title={`${mapName} — click to rename`}
           >
             {mapName}
           </button>
         )}
-        <span className="text-[11px] text-gray-400 bg-gray-100 rounded-full px-2 py-0.5">
-          {nodes.length} nodes · {edges.length} edges
-        </span>
       </div>
 
-      {/* Spacer */}
+      {/* Push nav to the right */}
       <div className="flex-1" />
 
-      {/* Nav items */}
-      <div className="flex items-center gap-1">
+      {/* ── Primary action ── */}
+      <button
+        onClick={onAddNode}
+        className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold transition-colors flex-shrink-0"
+      >
+        <Plus size={13} />
+        <span className="hidden sm:inline">Add Node</span>
+        <span className="sm:hidden">Add</span>
+      </button>
 
-        {/* Add Node */}
-        <button
-          onClick={onAddNode}
-          className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold transition-colors"
-        >
-          <Plus size={13} />
-          Add Node
-        </button>
+      <div className="w-px h-4 bg-gray-200 flex-shrink-0" />
 
-        <div className="w-px h-5 bg-gray-200 mx-0.5" />
+      {/* ── Text nav ── */}
+      <div className="flex items-center gap-0.5 flex-shrink-0">
 
         {/* Canvas Size */}
         <div className="relative">
           <button
             onClick={() => setShowCanvasMenu((v) => !v)}
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-              showCanvasMenu ? 'bg-gray-200 text-gray-800' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-            }`}
-            title="Canvas size"
+            className={showCanvasMenu ? navTextActive : navText}
           >
-            <Scaling size={13} />
-            Canvas Size
-            <ChevronDown size={11} className={`transition-transform ${showCanvasMenu ? 'rotate-180' : ''}`} />
+            <Scaling size={12} />
+            <span className="hidden md:inline">Canvas</span>
+            <ChevronDown size={10} className={`transition-transform ${showCanvasMenu ? 'rotate-180' : ''}`} />
           </button>
           {showCanvasMenu && (
             <>
               <div className="fixed inset-0 z-20" onClick={() => setShowCanvasMenu(false)} />
-              <div className="absolute left-0 top-full mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-30 py-1 overflow-hidden">
+              <div className="absolute right-0 top-full mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-30 py-1 overflow-hidden">
                 {CANVAS_SIZE_PRESETS.map((p) => {
                   const isActive = canvasWidth === p.w && canvasHeight === p.h;
                   return (
@@ -246,46 +233,43 @@ export function MainToolbar({ onAddNode, onFitView }: MainToolbarProps) {
         {/* Filters */}
         <button
           onClick={() => togglePanel('views')}
-          className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-            activePanel === 'views' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-          }`}
-          title="Toggle filters"
+          className={activePanel === 'views' ? navTextActive : navText}
         >
-          <SlidersHorizontal size={13} />
-          Filters
+          <SlidersHorizontal size={12} />
+          <span className="hidden md:inline">Filters</span>
           {hasActiveFilters && <span className="w-1.5 h-1.5 rounded-full bg-blue-500 flex-shrink-0" />}
         </button>
 
         {/* File */}
-        <div className="relative" ref={fileMenuRef}>
+        <div className="relative">
           <button
             onClick={() => setShowFileMenu((v) => !v)}
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-              showFileMenu ? 'bg-gray-200 text-gray-800' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-            }`}
+            className={showFileMenu ? navTextActive : `${navText} ${(saveFlash || cloudSaveFlash) ? '!text-green-600' : ''}`}
           >
-            {cloudSaveFlash ? <Check size={13} className="text-green-600" /> : saveFlash ? <Check size={13} className="text-green-600" /> : <FolderClosed size={13} />}
-            {cloudSaveFlash ? <span className="text-green-600">Cloud saved!</span> : saveFlash ? <span className="text-green-600">Saved!</span> : 'File'}
-            <ChevronDown size={11} className={`transition-transform ${showFileMenu ? 'rotate-180' : ''}`} />
+            {(saveFlash || cloudSaveFlash)
+              ? <Check size={12} className="text-green-600" />
+              : <FolderClosed size={12} />
+            }
+            <span className="hidden md:inline">
+              {cloudSaveFlash ? 'Saved!' : saveFlash ? 'Saved!' : 'File'}
+            </span>
+            <ChevronDown size={10} className={`transition-transform ${showFileMenu ? 'rotate-180' : ''}`} />
           </button>
           {showFileMenu && (
             <>
               <div className="fixed inset-0 z-20" onClick={() => setShowFileMenu(false)} />
-              <div className="absolute left-0 top-full mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-30 py-1 overflow-visible">
+              <div className="absolute right-0 top-full mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-30 py-1 overflow-visible">
 
-                {/* New */}
                 <button onClick={handleNewMap} className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 transition-colors">
                   <FilePlus size={13} className="text-gray-400" />New
                 </button>
 
                 <div className="my-1 border-t border-gray-100" />
 
-                {/* Open */}
                 <button onClick={() => openSavedMaps('local')} className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 transition-colors">
                   <FolderOpen size={13} className="text-gray-400" />Open…
                 </button>
 
-                {/* Save → submenu */}
                 <div className="relative group/save">
                   <button className="w-full flex items-center justify-between px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 transition-colors">
                     <span className="flex items-center gap-2.5"><Save size={13} className="text-gray-400" />Save</span>
@@ -306,12 +290,10 @@ export function MainToolbar({ onAddNode, onFitView }: MainToolbarProps) {
 
                 <div className="my-1 border-t border-gray-100" />
 
-                {/* Import */}
                 <button onClick={() => { fileInputRef.current?.click(); setShowFileMenu(false); }} className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 transition-colors">
                   <Upload size={13} className="text-gray-400" />Import JSON
                 </button>
 
-                {/* Export → submenu */}
                 <div className="relative group/export">
                   <button className="w-full flex items-center justify-between px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 transition-colors">
                     <span className="flex items-center gap-2.5"><Download size={13} className="text-gray-400" />Export</span>
@@ -336,7 +318,6 @@ export function MainToolbar({ onAddNode, onFitView }: MainToolbarProps) {
 
                 <div className="my-1 border-t border-gray-100" />
 
-                {/* Publish */}
                 <button onClick={() => { setShowPublish(true); setShowFileMenu(false); }} className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 transition-colors">
                   <Globe size={13} className="text-blue-400" />Publish to gallery
                 </button>
@@ -348,67 +329,58 @@ export function MainToolbar({ onAddNode, onFitView }: MainToolbarProps) {
         {/* Guide */}
         <button
           onClick={() => togglePanel('help')}
-          className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-            activePanel === 'help' ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-          }`}
-          title="Guide"
+          className={activePanel === 'help' ? navTextActive : navText}
         >
-          <HelpCircle size={13} />
-          Guide
+          <HelpCircle size={12} />
+          <span className="hidden md:inline">Guide</span>
         </button>
 
         {/* Gallery */}
         <a
           href="/gallery"
           onClick={() => history.replaceState(null, '', '/?resume=1')}
-          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors"
-          title="Browse published maps"
+          className={navText}
         >
-          <LayoutGrid size={13} />
-          Gallery
+          <LayoutGrid size={12} />
+          <span className="hidden md:inline">Gallery</span>
         </a>
-
-        <div className="w-px h-5 bg-gray-200 mx-0.5" />
-
-        {/* Fit view */}
-        <button
-          onClick={onFitView}
-          className="p-1.5 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-lg transition-colors"
-          title="Fit to view"
-        >
-          <Maximize2 size={13} />
-        </button>
-
-        {/* Auth */}
-        {AUTH_ENABLED && (
-          <>
-            <div className="w-px h-5 bg-gray-200" />
-            {isSignedIn ? (
-              <UserButton afterSignOutUrl="/" />
-            ) : (
-              <SignInButton mode="modal">
-                <button className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors">
-                  Sign in
-                </button>
-              </SignInButton>
-            )}
-          </>
-        )}
 
       </div>
 
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept=".json"
-        className="hidden"
-        onChange={(e) => {
-          const file = e.target.files?.[0];
-          if (file) handleImport(file);
-          e.target.value = '';
-        }}
-      />
+      <div className="w-px h-4 bg-gray-200 flex-shrink-0" />
+
+      {/* ── Auth circle ── */}
+      {AUTH_ENABLED ? (
+        isSignedIn
+          ? <UserButton afterSignOutUrl="/" />
+          : <SignInButton mode="modal">
+              <button
+                className="w-7 h-7 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors flex-shrink-0"
+                title="Sign in"
+              >
+                <UserRound size={15} className="text-gray-500" />
+              </button>
+            </SignInButton>
+      ) : (
+        /* Placeholder circle when auth not configured */
+        <div className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
+          <UserRound size={15} className="text-gray-300" />
+        </div>
+      )}
+
     </div>
+
+    <input
+      ref={fileInputRef}
+      type="file"
+      accept=".json"
+      className="hidden"
+      onChange={(e) => {
+        const file = e.target.files?.[0];
+        if (file) handleImport(file);
+        e.target.value = '';
+      }}
+    />
 
     {showSavedMaps && <SavedMapsModal onClose={() => setShowSavedMaps(false)} initialTab={savedMapsTab} />}
     {showPublish && <PublishModal onClose={() => setShowPublish(false)} />}
