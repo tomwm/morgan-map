@@ -306,6 +306,11 @@ export function MainToolbar({ onAddNode, onFitView }: MainToolbarProps) {
 
                 <div className="my-1 border-t border-gray-100" />
 
+                {/* Import */}
+                <button onClick={() => { fileInputRef.current?.click(); setShowFileMenu(false); }} className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 transition-colors">
+                  <Upload size={13} className="text-gray-400" />Import JSON
+                </button>
+
                 {/* Export → submenu */}
                 <div className="relative group/export">
                   <button className="w-full flex items-center justify-between px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 transition-colors">
@@ -325,10 +330,6 @@ export function MainToolbar({ onAddNode, onFitView }: MainToolbarProps) {
                     <div className="my-1 border-t border-gray-100" />
                     <button onClick={handleExportJSON} className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 transition-colors">
                       <Download size={13} className="text-gray-400" />JSON
-                    </button>
-                    <div className="my-1 border-t border-gray-100" />
-                    <button onClick={() => { fileInputRef.current?.click(); setShowFileMenu(false); }} className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 transition-colors">
-                      <Upload size={13} className="text-gray-400" />Import JSON
                     </button>
                   </div>
                 </div>
