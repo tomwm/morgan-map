@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
-import { Map, ArrowLeft, Copy, Check, LayoutGrid } from 'lucide-react';
+import { Map, ArrowLeft, Copy, Check, LayoutGrid, Trash2 } from 'lucide-react';
 import { useMapStore } from '../store/mapStore';
 import { MapCanvas } from '../components/MapCanvas';
 import { NodeDetailPanel } from '../components/Panel/NodeDetailPanel';
 import { ViewsPanel } from '../components/Panel/ViewsPanel';
 import { HelpPanel } from '../components/Panel/HelpPanel';
+import { getPublishToken, removePublishToken } from '../utils/localSaves';
 
 interface ViewerAppProps {
   mapId: string;
@@ -20,6 +21,9 @@ export function ViewerApp({ mapId }: ViewerAppProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  const canDelete = !!getPublishToken(mapId);
 
   useEffect(() => {
     fetch(`/api/maps/${mapId}`)
@@ -38,6 +42,22 @@ export function ViewerApp({ mapId }: ViewerAppProps) {
     navigator.clipboard.writeText(window.location.href);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleDelete = async () => {
+    const token = getPublishToken(mapId);
+    if (!token) return;
+    if (!confirm('Remove this map from the gallery? This cannot be undone.')) return;
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/maps/${mapId}?token=${token}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error();
+      removePublishToken(mapId);
+      window.location.href = '/gallery';
+    } catch {
+      alert('Failed to delete map. Please try again.');
+      setDeleting(false);
+    }
   };
 
   const showRightPanel =
@@ -83,6 +103,21 @@ export function ViewerApp({ mapId }: ViewerAppProps) {
         </span>
 
         <div className="flex-1" />
+
+        {canDelete && (
+          <button
+            onClick={handleDelete}
+            disabled={deleting}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-red-500 hover:bg-red-50 hover:text-red-600 transition-colors disabled:opacity-50"
+            title="Remove from gallery"
+          >
+            {deleting
+              ? <div className="w-3 h-3 border border-red-400 border-t-transparent rounded-full animate-spin" />
+              : <Trash2 size={13} />
+            }
+            {deleting ? 'Deleting…' : 'Delete'}
+          </button>
+        )}
 
         <a
           href="/gallery"

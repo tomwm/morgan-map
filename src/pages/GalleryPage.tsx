@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
-import { Map, ArrowLeft, Calendar } from 'lucide-react';
+import { Map, ArrowLeft, Calendar, Trash2 } from 'lucide-react';
+import { getPublishToken, removePublishToken } from '../utils/localSaves';
+import { MapThumbnail } from '../components/MapThumbnail';
 
 function goBackToEditor() {
   if (window.history.length > 1) {
@@ -8,7 +10,6 @@ function goBackToEditor() {
     window.location.href = '/?resume=1';
   }
 }
-import { MapThumbnail } from '../components/MapThumbnail';
 
 interface PublishedMap {
   id: string;
@@ -35,6 +36,7 @@ export function GalleryPage() {
   const [maps, setMaps] = useState<PublishedMap[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
     fetch('/api/maps')
@@ -42,6 +44,25 @@ export function GalleryPage() {
       .then((data) => { setMaps(data); setLoading(false); })
       .catch(() => { setError(true); setLoading(false); });
   }, []);
+
+  const handleDelete = async (e: React.MouseEvent, mapId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const token = getPublishToken(mapId);
+    if (!token) return;
+    if (!confirm('Remove this map from the gallery?')) return;
+    setDeletingId(mapId);
+    try {
+      const res = await fetch(`/api/maps/${mapId}?token=${token}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error();
+      removePublishToken(mapId);
+      setMaps((prev) => prev.filter((m) => m.id !== mapId));
+    } catch {
+      alert('Failed to delete map. Please try again.');
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -97,35 +118,55 @@ export function GalleryPage() {
           <>
             <p className="text-xs text-gray-400 mb-5">{maps.length} map{maps.length !== 1 ? 's' : ''} published</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {maps.map((m) => (
-                <a
-                  key={m.id}
-                  href={`/view/${m.id}`}
-                  className="group bg-white rounded-xl border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all p-4 flex flex-col gap-3"
-                >
-                  {/* Map thumbnail */}
-                  <div className="w-full h-24 rounded-lg bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-100 overflow-hidden">
-                    <MapThumbnail
-                      nodes={m.node_positions ?? []}
-                      edges={m.edge_positions ?? []}
-                    />
-                  </div>
+              {maps.map((m) => {
+                const canDelete = !!getPublishToken(m.id);
+                const isDeleting = deletingId === m.id;
+                return (
+                  <div key={m.id} className="relative group">
+                    <a
+                      href={`/view/${m.id}`}
+                      className="block bg-white rounded-xl border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all p-4 flex flex-col gap-3"
+                    >
+                      {/* Map thumbnail */}
+                      <div className="w-full h-24 rounded-lg bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-100 overflow-hidden">
+                        <MapThumbnail
+                          nodes={m.node_positions ?? []}
+                          edges={m.edge_positions ?? []}
+                        />
+                      </div>
 
-                  {/* Info */}
-                  <div>
-                    <p className="text-sm font-semibold text-gray-800 group-hover:text-blue-700 transition-colors leading-snug mb-1">
-                      {m.name}
-                    </p>
-                    <div className="flex items-center gap-3 text-[11px] text-gray-400">
-                      <span>{m.node_count} nodes · {m.edge_count} edges</span>
-                      <span className="flex items-center gap-1 ml-auto">
-                        <Calendar size={10} />
-                        {timeAgo(m.published_at)}
-                      </span>
-                    </div>
+                      {/* Info */}
+                      <div>
+                        <p className="text-sm font-semibold text-gray-800 group-hover:text-blue-700 transition-colors leading-snug mb-1">
+                          {m.name}
+                        </p>
+                        <div className="flex items-center gap-3 text-[11px] text-gray-400">
+                          <span>{m.node_count} nodes · {m.edge_count} edges</span>
+                          <span className="flex items-center gap-1 ml-auto">
+                            <Calendar size={10} />
+                            {timeAgo(m.published_at)}
+                          </span>
+                        </div>
+                      </div>
+                    </a>
+
+                    {/* Delete button — only shown if user published this map */}
+                    {canDelete && (
+                      <button
+                        onClick={(e) => handleDelete(e, m.id)}
+                        disabled={isDeleting}
+                        className="absolute top-3 right-3 p-1.5 rounded-lg bg-white border border-gray-200 text-gray-400 hover:bg-red-50 hover:border-red-200 hover:text-red-500 shadow-sm opacity-0 group-hover:opacity-100 transition-all disabled:opacity-50"
+                        title="Remove from gallery"
+                      >
+                        {isDeleting
+                          ? <div className="w-3 h-3 border border-red-400 border-t-transparent rounded-full animate-spin" />
+                          : <Trash2 size={13} />
+                        }
+                      </button>
+                    )}
                   </div>
-                </a>
-              ))}
+                );
+              })}
             </div>
           </>
         )}

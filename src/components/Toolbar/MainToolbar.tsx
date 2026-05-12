@@ -63,9 +63,9 @@ export function MainToolbar({ onAddNode, onFitView }: MainToolbarProps) {
   const [editingName, setEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState(mapName);
   const [showSavedMaps, setShowSavedMaps] = useState(false);
-  const [savedMapsTab, setSavedMapsTab] = useState<'local' | 'cloud' | 'published'>('local');
+  const [savedMapsTab, setSavedMapsTab] = useState<'local' | 'cloud'>('local');
 
-  const openSavedMaps = (tab: 'local' | 'cloud' | 'published') => {
+  const openSavedMaps = (tab: 'local' | 'cloud') => {
     setSavedMapsTab(tab);
     setShowSavedMaps(true);
     setShowFileMenu(false);

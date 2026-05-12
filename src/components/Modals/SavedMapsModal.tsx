@@ -1,21 +1,11 @@
 import { useState, useEffect } from 'react';
-import { X, FolderOpen, Trash2, Clock, Database, BookOpen, Star, Globe, Calendar, Cloud, LogIn } from 'lucide-react';
+import { X, FolderOpen, Trash2, Clock, Database, BookOpen, Star, Cloud, LogIn } from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
-import { listSavedMaps, deleteSavedMap, formatSavedAt, SavedMap, getPublishToken, removePublishToken } from '../../utils/localSaves';
+import { listSavedMaps, deleteSavedMap, formatSavedAt, SavedMap } from '../../utils/localSaves';
 import { listCloudMaps, loadCloudMapData, deleteCloudMap, CloudMap } from '../../utils/cloudSaves';
 import { useMapStore } from '../../store/mapStore';
 import { SEED_NODES, SEED_EDGES } from '../../data/seedData';
 import { AUTH_ENABLED } from '../Auth/AuthProvider';
-
-interface PublishedMap {
-  id: string;
-  name: string;
-  node_count: number;
-  node_positions: { id: string; x: number; y: number; type: string }[];
-  edge_positions: { source: string; target: string }[];
-  edge_count: number;
-  published_at: string;
-}
 
 function timeAgo(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime();
@@ -29,15 +19,13 @@ function timeAgo(dateStr: string): string {
 
 interface SavedMapsModalProps {
   onClose: () => void;
-  initialTab?: 'local' | 'cloud' | 'published';
+  initialTab?: 'local' | 'cloud';
 }
 
 export function SavedMapsModal({ onClose, initialTab = 'local' }: SavedMapsModalProps) {
-  const [tab, setTab] = useState<'local' | 'cloud' | 'published'>(initialTab);
+  const [tab, setTab] = useState<'local' | 'cloud'>(initialTab);
   const [saves, setSaves] = useState<SavedMap[]>([]);
-  const [published, setPublished] = useState<PublishedMap[]>([]);
   const [cloudMaps, setCloudMaps] = useState<CloudMap[]>([]);
-  const [publishedLoading, setPublishedLoading] = useState(false);
   const [cloudLoading, setCloudLoading] = useState(false);
   const importMap = useMapStore((s) => s.importMap);
   const setMapName = useMapStore((s) => s.setMapName);
@@ -56,13 +44,6 @@ export function SavedMapsModal({ onClose, initialTab = 'local' }: SavedMapsModal
   }, []);
 
   useEffect(() => {
-    if (tab === 'published' && published.length === 0) {
-      setPublishedLoading(true);
-      fetch('/api/maps')
-        .then((r) => r.json())
-        .then((data) => { setPublished(data); setPublishedLoading(false); })
-        .catch(() => setPublishedLoading(false));
-    }
     if (tab === 'cloud' && isSignedIn && cloudMaps.length === 0) {
       setCloudLoading(true);
       getToken().then((token) => {
@@ -121,19 +102,6 @@ export function SavedMapsModal({ onClose, initialTab = 'local' }: SavedMapsModal
     }
   };
 
-  const handleDeletePublished = async (mapId: string) => {
-    const token = getPublishToken(mapId);
-    if (!token) return;
-    try {
-      const res = await fetch(`/api/maps/${mapId}?token=${token}`, { method: 'DELETE' });
-      if (!res.ok) throw new Error();
-      removePublishToken(mapId);
-      setPublished((prev) => prev.filter((m) => m.id !== mapId));
-    } catch {
-      alert('Failed to delete map. Please try again.');
-    }
-  };
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
       <div className="bg-white rounded-2xl shadow-2xl w-[480px] max-h-[80vh] flex flex-col overflow-hidden">
@@ -163,19 +131,12 @@ export function SavedMapsModal({ onClose, initialTab = 'local' }: SavedMapsModal
           {AUTH_ENABLED && (
             <button
               onClick={() => setTab('cloud')}
-              className={`flex items-center gap-1.5 px-1 py-3 text-xs font-medium border-b-2 transition-colors mr-5 ${tab === 'cloud' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+              className={`flex items-center gap-1.5 px-1 py-3 text-xs font-medium border-b-2 transition-colors ${tab === 'cloud' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
             >
               <Cloud size={12} />
               Cloud
             </button>
           )}
-          <button
-            onClick={() => setTab('published')}
-            className={`flex items-center gap-1.5 px-1 py-3 text-xs font-medium border-b-2 transition-colors ${tab === 'published' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
-          >
-            <Globe size={12} />
-            Published
-          </button>
         </div>
 
         {/* Body */}
@@ -238,66 +199,6 @@ export function SavedMapsModal({ onClose, initialTab = 'local' }: SavedMapsModal
                       </div>
                     </div>
                   ))}
-                </div>
-              )}
-            </>
-          )}
-
-          {/* ── Published tab ── */}
-          {tab === 'published' && (
-            <>
-              {publishedLoading && (
-                <div className="flex items-center justify-center py-12">
-                  <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
-                </div>
-              )}
-              {!publishedLoading && published.length === 0 && (
-                <div className="flex flex-col items-center justify-center py-12 text-center">
-                  <Globe size={28} className="text-gray-200 mb-3" />
-                  <p className="text-sm font-medium text-gray-400">No published maps yet</p>
-                  <p className="text-xs text-gray-300 mt-1">Use File → Publish to gallery to share your map.</p>
-                </div>
-              )}
-              {!publishedLoading && published.length > 0 && (
-                <div className="flex flex-col gap-2">
-                  {published.map((m) => {
-                    const canDelete = !!getPublishToken(m.id);
-                    return (
-                      <div
-                        key={m.id}
-                        className="flex items-center gap-3 p-3 rounded-xl border border-gray-100 hover:border-blue-200 hover:bg-blue-50/40 group transition-all"
-                      >
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-800 truncate">{m.name}</p>
-                          <div className="flex items-center gap-3 mt-0.5">
-                            <span className="text-[11px] text-gray-400">{m.node_count} nodes · {m.edge_count} edges</span>
-                            <span className="flex items-center gap-1 text-[11px] text-gray-400 ml-auto">
-                              <Calendar size={10} />
-                              {timeAgo(m.published_at)}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
-                          {canDelete && (
-                            <button
-                              onClick={() => handleDeletePublished(m.id)}
-                              className="p-1.5 rounded-lg hover:bg-red-100 text-gray-400 hover:text-red-500 transition-colors"
-                              title="Delete from gallery"
-                            >
-                              <Trash2 size={13} />
-                            </button>
-                          )}
-                          <a
-                            href={`/view/${m.id}`}
-                            className="flex items-center gap-1 px-2.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold transition-colors"
-                          >
-                            <FolderOpen size={11} />
-                            Open
-                          </a>
-                        </div>
-                      </div>
-                    );
-                  })}
                 </div>
               )}
             </>
