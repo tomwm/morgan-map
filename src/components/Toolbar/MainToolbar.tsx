@@ -280,30 +280,10 @@ export function MainToolbar({ onAddNode, onFitView }: MainToolbarProps) {
 
                 <div className="my-1 border-t border-gray-100" />
 
-                {/* Open → submenu */}
-                <div className="relative group/open">
-                  <button className="w-full flex items-center justify-between px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 transition-colors">
-                    <span className="flex items-center gap-2.5"><FolderOpen size={13} className="text-gray-400" />Open</span>
-                    <ChevronRight size={11} className="text-gray-400" />
-                  </button>
-                  <div className="absolute left-full top-0 -mt-1 ml-0.5 hidden group-hover/open:block w-44 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-40">
-                    <button onClick={() => openSavedMaps('local')} className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 transition-colors">
-                      <FolderClosed size={13} className="text-gray-400" />Local saves
-                    </button>
-                    {AUTH_ENABLED && (
-                      <button onClick={() => openSavedMaps('cloud')} className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 transition-colors">
-                        <Cloud size={13} className="text-blue-400" />Cloud
-                      </button>
-                    )}
-                    <button onClick={() => openSavedMaps('published')} className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 transition-colors">
-                      <Globe size={13} className="text-gray-400" />Published maps
-                    </button>
-                    <div className="my-1 border-t border-gray-100" />
-                    <button onClick={() => { fileInputRef.current?.click(); setShowFileMenu(false); }} className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 transition-colors">
-                      <Upload size={13} className="text-gray-400" />Import from file
-                    </button>
-                  </div>
-                </div>
+                {/* Open */}
+                <button onClick={() => openSavedMaps('local')} className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 transition-colors">
+                  <FolderOpen size={13} className="text-gray-400" />Open…
+                </button>
 
                 {/* Save → submenu */}
                 <div className="relative group/save">
@@ -345,6 +325,10 @@ export function MainToolbar({ onAddNode, onFitView }: MainToolbarProps) {
                     <div className="my-1 border-t border-gray-100" />
                     <button onClick={handleExportJSON} className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 transition-colors">
                       <Download size={13} className="text-gray-400" />JSON
+                    </button>
+                    <div className="my-1 border-t border-gray-100" />
+                    <button onClick={() => { fileInputRef.current?.click(); setShowFileMenu(false); }} className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 transition-colors">
+                      <Upload size={13} className="text-gray-400" />Import JSON
                     </button>
                   </div>
                 </div>
