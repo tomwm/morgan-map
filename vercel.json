@@ -1,5 +1,6 @@
 {
   "rewrites": [
+    { "source": "/morgan-map/api/:path*",    "destination": "/api/:path*" },
     { "source": "/morgan-map/assets/:path*", "destination": "/assets/:path*" },
     { "source": "/gallery",    "destination": "/index.html" },
     { "source": "/view/:id",   "destination": "/index.html" },

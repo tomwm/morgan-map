@@ -7,6 +7,7 @@ import { NodeDetailPanel } from '../components/Panel/NodeDetailPanel';
 import { ViewsPanel } from '../components/Panel/ViewsPanel';
 import { HelpPanel } from '../components/Panel/HelpPanel';
 import { getPublishToken, removePublishToken } from '../utils/localSaves';
+import { apiUrl } from '../utils/api';
 import { AUTH_ENABLED } from '../components/Auth/AuthProvider';
 
 interface ViewerAppProps {
@@ -31,7 +32,7 @@ export function ViewerApp({ mapId }: ViewerAppProps) {
   const canDelete = !!getPublishToken(mapId);
 
   useEffect(() => {
-    fetch(`/api/maps/${mapId}`)
+    fetch(apiUrl(`/api/maps/${mapId}`))
       .then((r) => { if (!r.ok) throw new Error(); return r.json(); })
       .then((data) => {
         importMap({ nodes: data.nodes, edges: data.edges });
@@ -55,7 +56,7 @@ export function ViewerApp({ mapId }: ViewerAppProps) {
     if (!confirm('Remove this map from the gallery? This cannot be undone.')) return;
     setDeleting(true);
     try {
-      const res = await fetch(`/api/maps/${mapId}?token=${token}`, { method: 'DELETE' });
+      const res = await fetch(apiUrl(`/api/maps/${mapId}?token=${token}`), { method: 'DELETE' });
       if (!res.ok) throw new Error();
       removePublishToken(mapId);
       window.location.href = '/gallery';

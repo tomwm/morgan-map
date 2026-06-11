@@ -1,5 +1,6 @@
 import { Node, Edge } from 'reactflow';
 import { NodeData, EdgeData } from '../types';
+import { apiUrl } from './api';
 
 export interface CloudMap {
   id: string;
@@ -22,7 +23,7 @@ async function authHeaders(getToken: () => Promise<string | null>) {
 }
 
 export async function listCloudMaps(getToken: () => Promise<string | null>): Promise<CloudMap[]> {
-  const res = await fetch('/api/user/maps', { headers: await authHeaders(getToken) });
+  const res = await fetch(apiUrl('/api/user/maps'), { headers: await authHeaders(getToken) });
   if (!res.ok) throw new Error('Failed to load cloud maps');
   return res.json();
 }
@@ -39,7 +40,7 @@ export async function saveCloudMap(
     gridLocked: boolean;
   }
 ): Promise<CloudMap> {
-  const res = await fetch('/api/user/maps', {
+  const res = await fetch(apiUrl('/api/user/maps'), {
     method: 'POST',
     headers: await authHeaders(getToken),
     body: JSON.stringify(payload),
@@ -52,7 +53,7 @@ export async function deleteCloudMap(
   getToken: () => Promise<string | null>,
   id: string
 ): Promise<void> {
-  const res = await fetch(`/api/user/maps?id=${id}`, {
+  const res = await fetch(apiUrl(`/api/user/maps?id=${id}`), {
     method: 'DELETE',
     headers: await authHeaders(getToken),
   });
@@ -63,7 +64,7 @@ export async function loadCloudMapData(
   getToken: () => Promise<string | null>,
   id: string
 ): Promise<{ nodes: Node<NodeData>[]; edges: Edge<EdgeData>[]; name: string; canvasWidth: number; canvasHeight: number; gridLocked: boolean }> {
-  const res = await fetch(`/api/user/maps/${id}`, { headers: await authHeaders(getToken) });
+  const res = await fetch(apiUrl(`/api/user/maps/${id}`), { headers: await authHeaders(getToken) });
   if (!res.ok) throw new Error('Failed to load map');
   return res.json();
 }

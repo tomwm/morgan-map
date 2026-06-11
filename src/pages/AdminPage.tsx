@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { apiUrl } from '../utils/api';
 import { Map, Trash2, LogIn, Loader2, AlertCircle } from 'lucide-react';
 
 interface PublishedMap {
@@ -35,7 +36,7 @@ export function AdminPage() {
     setAuthLoading(true);
     setAuthError(false);
     try {
-      const res = await fetch('/api/admin/maps', { headers });
+      const res = await fetch(apiUrl('/api/admin/maps'), { headers });
       if (!res.ok) { setAuthError(true); return; }
       const data = await res.json();
       setMaps(data);
@@ -51,7 +52,7 @@ export function AdminPage() {
     if (!confirm('Delete this map from the gallery? This cannot be undone.')) return;
     setDeletingId(id);
     try {
-      const res = await fetch(`/api/admin/maps?id=${id}`, { method: 'DELETE', headers });
+      const res = await fetch(apiUrl(`/api/admin/maps?id=${id}`), { method: 'DELETE', headers });
       if (!res.ok) throw new Error();
       setMaps((prev) => prev.filter((m) => m.id !== id));
     } catch {

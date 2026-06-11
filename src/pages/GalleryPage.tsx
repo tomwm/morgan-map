@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Map, Calendar, Trash2, LogIn } from 'lucide-react';
 import { UserButton, SignInButton, useAuth } from '@clerk/clerk-react';
 import { getPublishToken, removePublishToken } from '../utils/localSaves';
+import { apiUrl } from '../utils/api';
 import { MapThumbnail } from '../components/MapThumbnail';
 import { AUTH_ENABLED } from '../components/Auth/AuthProvider';
 
@@ -37,7 +38,7 @@ export function GalleryPage() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch('/api/maps')
+    fetch(apiUrl('/api/maps'))
       .then((r) => r.json())
       .then((data) => { setMaps(data); setLoading(false); })
       .catch(() => { setError(true); setLoading(false); });
@@ -51,7 +52,7 @@ export function GalleryPage() {
     if (!confirm('Remove this map from the gallery?')) return;
     setDeletingId(mapId);
     try {
-      const res = await fetch(`/api/maps/${mapId}?token=${token}`, { method: 'DELETE' });
+      const res = await fetch(apiUrl(`/api/maps/${mapId}?token=${token}`), { method: 'DELETE' });
       if (!res.ok) throw new Error();
       removePublishToken(mapId);
       setMaps((prev) => prev.filter((m) => m.id !== mapId));
