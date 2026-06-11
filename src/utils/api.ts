@@ -14,7 +14,9 @@ export function apiUrl(path: string): string {
   return `${base}${path}`;
 }
 
-/** Prefix an internal page path (e.g. '/gallery', '/view/123') with the app base. */
+/** Prefix an internal page path (e.g. '/gallery', '/view/123') with the app base.
+ *  For the root path '/', returns just the base (e.g. '/morgan-map') with no trailing slash. */
 export function pageUrl(path: string): string {
+  if (path === '/') return base || '/';
   return `${base}${path}`;
 }
