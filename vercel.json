@@ -1,14 +1,10 @@
 {
-  "redirects": [
-    { "source": "/",         "destination": "/morgan-map/", "permanent": false },
-    { "source": "/gallery",  "destination": "/morgan-map/gallery", "permanent": false },
-    { "source": "/view/:id", "destination": "/morgan-map/view/:id", "permanent": false }
-  ],
   "rewrites": [
-    { "source": "/morgan-map/gallery",    "destination": "/morgan-map/index.html" },
-    { "source": "/morgan-map/view/:id",   "destination": "/morgan-map/index.html" },
-    { "source": "/morgan-map/admin",      "destination": "/morgan-map/index.html" },
-    { "source": "/morgan-map/sign-in",    "destination": "/morgan-map/index.html" },
-    { "source": "/morgan-map/sign-up",    "destination": "/morgan-map/index.html" }
+    { "source": "/morgan-map/assets/:path*", "destination": "/assets/:path*" },
+    { "source": "/gallery",    "destination": "/index.html" },
+    { "source": "/view/:id",   "destination": "/index.html" },
+    { "source": "/admin",      "destination": "/index.html" },
+    { "source": "/sign-in",    "destination": "/index.html" },
+    { "source": "/sign-up",    "destination": "/index.html" }
   ]
 }
