@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Map, Calendar, Trash2, LogIn } from 'lucide-react';
 import { UserButton, SignInButton, useAuth } from '@clerk/clerk-react';
 import { getPublishToken, removePublishToken } from '../utils/localSaves';
-import { apiUrl } from '../utils/api';
+import { apiUrl, pageUrl } from '../utils/api';
 import { MapThumbnail } from '../components/MapThumbnail';
 import { AUTH_ENABLED } from '../components/Auth/AuthProvider';
 
@@ -68,7 +68,7 @@ export function GalleryPage() {
 
       {/* Header */}
       <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center gap-4">
-        <a href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+        <a href={pageUrl('/')} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
           <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
             <Map size={14} className="text-white" />
           </div>
@@ -127,7 +127,7 @@ export function GalleryPage() {
                 return (
                   <div key={m.id} className="relative group">
                     <a
-                      href={`/view/${m.id}`}
+                      href={pageUrl(`/view/${m.id}`)}
                       className="block bg-white rounded-xl border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all p-4 flex flex-col gap-3"
                     >
                       {/* Map thumbnail */}

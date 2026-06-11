@@ -6,6 +6,7 @@ import { listCloudMaps, loadCloudMapData, deleteCloudMap, CloudMap } from '../..
 import { useMapStore } from '../../store/mapStore';
 import { SEED_NODES, SEED_EDGES } from '../../data/seedData';
 import { AUTH_ENABLED } from '../Auth/AuthProvider';
+import { pageUrl } from '../../utils/api';
 
 function timeAgo(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime();
@@ -150,7 +151,7 @@ export function SavedMapsModal({ onClose, initialTab = 'local' }: SavedMapsModal
                   <Cloud size={28} className="text-gray-200" />
                   <p className="text-sm font-medium text-gray-400">Sign in to sync maps across devices</p>
                   <a
-                    href="/sign-in"
+                    href={pageUrl('/sign-in')}
                     className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold transition-colors"
                   >
                     <LogIn size={12} />

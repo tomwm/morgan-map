@@ -27,6 +27,7 @@ import { exportAsPng, exportAsSvg, exportAsPdf } from '../../utils/exportCanvas'
 import { SavedMapsModal } from '../Modals/SavedMapsModal';
 import { PublishModal } from '../Modals/PublishModal';
 import { AUTH_ENABLED } from '../Auth/AuthProvider';
+import { pageUrl } from '../../utils/api';
 
 interface MainToolbarProps {
   onAddNode: () => void;
@@ -324,7 +325,7 @@ export function MainToolbar({ onAddNode }: MainToolbarProps) {
 
         {/* Gallery */}
         <a
-          href="/gallery"
+          href={pageUrl('/gallery')}
           onClick={() => history.replaceState(null, '', '/?resume=1')}
           className={navText}
         >

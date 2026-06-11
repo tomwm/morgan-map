@@ -7,7 +7,7 @@ import { NodeDetailPanel } from '../components/Panel/NodeDetailPanel';
 import { ViewsPanel } from '../components/Panel/ViewsPanel';
 import { HelpPanel } from '../components/Panel/HelpPanel';
 import { getPublishToken, removePublishToken } from '../utils/localSaves';
-import { apiUrl } from '../utils/api';
+import { apiUrl, pageUrl } from '../utils/api';
 import { AUTH_ENABLED } from '../components/Auth/AuthProvider';
 
 interface ViewerAppProps {
@@ -59,7 +59,7 @@ export function ViewerApp({ mapId }: ViewerAppProps) {
       const res = await fetch(apiUrl(`/api/maps/${mapId}?token=${token}`), { method: 'DELETE' });
       if (!res.ok) throw new Error();
       removePublishToken(mapId);
-      window.location.href = '/gallery';
+      window.location.href = pageUrl('/gallery');
     } catch {
       alert('Failed to delete map. Please try again.');
       setDeleting(false);
@@ -81,7 +81,7 @@ export function ViewerApp({ mapId }: ViewerAppProps) {
     return (
       <div className="flex h-screen items-center justify-center bg-gray-50 flex-col gap-3">
         <p className="text-sm font-medium text-gray-600">Map not found</p>
-        <a href="/gallery" className="text-xs text-blue-600 hover:underline">
+        <a href={pageUrl('/gallery')} className="text-xs text-blue-600 hover:underline">
           Back to gallery
         </a>
       </div>
@@ -94,7 +94,7 @@ export function ViewerApp({ mapId }: ViewerAppProps) {
       {/* Viewer toolbar */}
       <div className="flex items-center h-14 px-4 bg-white border-b border-gray-200 gap-3 flex-shrink-0 z-10">
         {/* Brand — links to editor */}
-        <a href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+        <a href={pageUrl('/')} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
           <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
             <Map size={14} className="text-white" />
           </div>
@@ -128,7 +128,7 @@ export function ViewerApp({ mapId }: ViewerAppProps) {
             </button>
 
             <a
-              href="/?resume=1"
+              href={pageUrl('/?resume=1')}
               className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold transition-colors"
               title="Open this map in the editor"
             >
@@ -140,7 +140,7 @@ export function ViewerApp({ mapId }: ViewerAppProps) {
 
         {/* Always-visible actions */}
         <a
-          href="/gallery"
+          href={pageUrl('/gallery')}
           className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors"
         >
           <LayoutGrid size={13} />

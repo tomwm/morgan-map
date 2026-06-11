@@ -1,4 +1,5 @@
 import { Map, Plus, BookOpen, LayoutGrid } from 'lucide-react';
+import { pageUrl } from '../../utils/api';
 import { useMapStore } from '../../store/mapStore';
 import { SEED_NODES, SEED_EDGES } from '../../data/seedData';
 
@@ -66,7 +67,7 @@ export function WelcomeModal({ onDismiss }: WelcomeModalProps) {
           </button>
 
           <a
-            href="/gallery"
+            href={pageUrl('/gallery')}
             onClick={() => history.replaceState(null, '', '/?resume=1')}
             className="group w-full flex items-start gap-4 p-4 rounded-xl border-2 border-gray-100 hover:border-purple-200 hover:bg-purple-50 transition-all text-left"
           >

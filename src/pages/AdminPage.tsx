@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { apiUrl } from '../utils/api';
+import { apiUrl, pageUrl } from '../utils/api';
 import { Map, Trash2, LogIn, Loader2, AlertCircle } from 'lucide-react';
 
 interface PublishedMap {
@@ -135,7 +135,7 @@ export function AdminPage() {
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
                     <a
-                      href={`/view/${m.id}`}
+                      href={pageUrl(`/view/${m.id}`)}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-[11px] text-blue-500 hover:text-blue-700 transition-colors"

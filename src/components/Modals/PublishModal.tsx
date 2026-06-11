@@ -2,12 +2,13 @@ import { useState } from 'react';
 import { X, Globe, Copy, Check, ExternalLink, Loader2 } from 'lucide-react';
 import { useMapStore } from '../../store/mapStore';
 import { savePublishToken } from '../../utils/localSaves';
+import { apiUrl, pageUrl } from '../../utils/api';
 
 interface PublishModalProps {
   onClose: () => void;
 }
 
-const API_BASE = '/api/maps';
+const API_BASE = apiUrl('/api/maps');
 
 export function PublishModal({ onClose }: PublishModalProps) {
   const mapName = useMapStore((s) => s.mapName);
@@ -19,7 +20,7 @@ export function PublishModal({ onClose }: PublishModalProps) {
   const [copied, setCopied] = useState(false);
 
   const shareUrl = publishedId
-    ? `${window.location.origin}/view/${publishedId}`
+    ? `${window.location.origin}${pageUrl(`/view/${publishedId}`)}`
     : '';
 
   const handlePublish = async () => {
